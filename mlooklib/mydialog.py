@@ -2,7 +2,7 @@ import wx
 
 class ConnDBDialog(wx.Dialog):
     def __init__(
-            self, parent, ID, title, size=wx.DefaultSize, pos=wx.DefaultPosition, 
+            self, parent, ID, title, size=wx.DefaultSize, pos=wx.DefaultPosition,
             style=wx.DEFAULT_DIALOG_STYLE,
             useMetal=False,
             ):
@@ -31,27 +31,27 @@ class ConnDBDialog(wx.Dialog):
 
         box_host = wx.BoxSizer(wx.HORIZONTAL)
         label_host = wx.StaticText(self, -1, "Host:")
-        box_host.Add(label_host, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
-        self.text_host = wx.TextCtrl(self, -1, "localhost", size=(80,-1))
-        box_host.Add(self.text_host, 1, wx.ALIGN_CENTRE|wx.ALL, 5)
-        sizer.Add(box_host, 0, wx.GROW|wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5)
+        box_host.Add(label_host, 0, wx.ALIGN_CENTRE | wx.ALL, 5)
+        self.text_host = wx.TextCtrl(self, -1, "localhost", size=(80, -1))
+        box_host.Add(self.text_host, 1, wx.ALIGN_CENTRE | wx.ALL, 5)
+        sizer.Add(box_host, 0, wx.GROW | wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
 
         box_port = wx.BoxSizer(wx.HORIZONTAL)
         label_port = wx.StaticText(self, -1, "Port:")
-        box_port.Add(label_port, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
-        self.text_port = wx.TextCtrl(self, -1, "27017", size=(80,-1))
-        box_port.Add(self.text_port, 1, wx.ALIGN_CENTRE|wx.ALL, 5)
-        sizer.Add(box_port, 0, wx.GROW|wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5)
+        box_port.Add(label_port, 0, wx.ALIGN_CENTRE | wx.ALL, 5)
+        self.text_port = wx.TextCtrl(self, -1, "27017", size=(80, -1))
+        box_port.Add(self.text_port, 1, wx.ALIGN_CENTRE | wx.ALL, 5)
+        sizer.Add(box_port, 0, wx.GROW | wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
 
         box_db = wx.BoxSizer(wx.HORIZONTAL)
-        label_db = wx.StaticText(self,-1,"DB:  ")
-        box_db.Add(label_db,0,wx.ALIGN_CENTRE|wx.ALL,5)
-        self.text_db = wx.TextCtrl(self, -1, "", size=(80,-1))
-        box_db.Add(self.text_db, 1, wx.ALIGN_CENTRE|wx.ALL, 5)
-        sizer.Add(box_db, 0, wx.GROW|wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5)
+        label_db = wx.StaticText(self, -1, "DB:  ")
+        box_db.Add(label_db, 0, wx.ALIGN_CENTRE | wx.ALL, 5)
+        self.text_db = wx.TextCtrl(self, -1, "", size=(80, -1))
+        box_db.Add(self.text_db, 1, wx.ALIGN_CENTRE | wx.ALL, 5)
+        sizer.Add(box_db, 0, wx.GROW | wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
 
-        line = wx.StaticLine(self, -1, size=(20,-1), style=wx.LI_HORIZONTAL)
-        sizer.Add(line, 0, wx.GROW|wx.ALIGN_CENTER_VERTICAL|wx.RIGHT|wx.TOP, 5)
+        line = wx.StaticLine(self, -1, size=(20, -1), style=wx.LI_HORIZONTAL)
+        sizer.Add(line, 0, wx.GROW | wx.ALIGN_CENTER_VERTICAL | wx.RIGHT | wx.TOP, 5)
 
         btnsizer = wx.StdDialogButtonSizer()
         
@@ -67,10 +67,16 @@ class ConnDBDialog(wx.Dialog):
         btnsizer.AddButton(btn)
         btnsizer.Realize()
 
-        sizer.Add(btnsizer, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5)
+        sizer.Add(btnsizer, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
 
         self.SetSizer(sizer)
         sizer.Fit(self)
-
-    def get_value(self):
-        return self.text_host.GetValue(),self.text_port.GetValue(),self.text_db.GetValue()
+    
+    def get_host(self):
+        return self.text_host.GetValue()
+    
+    def get_port(self):
+        return int(self.text_port.GetValue())
+        
+    def get_db(self):
+        return self.text_db.GetValue()

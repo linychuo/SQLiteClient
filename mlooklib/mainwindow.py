@@ -2,6 +2,7 @@ import wx
 import wx.aui
 import wx.grid
 import wx.html
+import  wx.gizmos as gizmos
 
 from mydialog import ConnDBDialog
 from dbutil import *
@@ -10,9 +11,9 @@ from dbutil import *
 ID_SHOW_CONN_DIALOG = wx.NewId()
 
 class MainWindow(wx.Frame):
-    def __init__(self, parent, id=-1, title="", pos=wx.DefaultPosition,
-                 size=wx.DefaultSize, style=wx.DEFAULT_FRAME_STYLE |
-                                            wx.SUNKEN_BORDER |
+    def __init__(self, parent, id= -1, title="", pos=wx.DefaultPosition,
+                 size=wx.DefaultSize, style=wx.DEFAULT_FRAME_STYLE | 
+                                            wx.SUNKEN_BORDER | 
                                             wx.CLIP_CHILDREN):
         wx.Frame.__init__(self, parent, id, title, pos, size, style)
 
@@ -22,10 +23,12 @@ class MainWindow(wx.Frame):
         self.createMenuBar()
         self.createStatusBar()
         self.createToolBar()
+        self.host = ''
+        self.port = 0
 
         self._mgr.AddPane(self.CreateTreeCtrl(), wx.aui.AuiPaneInfo().Name("left").Caption("DB info").Left().Layer(1).Position(1).CloseButton(True).MaximizeButton(True))
-        #self._mgr.AddPane(self.CreateGrid(), wx.aui.AuiPaneInfo().Name("grid_content").CenterPane().MaximizeButton(True))
-        self._mgr.AddPane(self.CreateHTMLCtrl(), wx.aui.AuiPaneInfo().Name("right").CenterPane())
+        self._mgr.AddPane(self.CreateHTMLCtrl(), wx.aui.AuiPaneInfo().Name("right_html").CenterPane())
+        self._mgr.AddPane(self.CreateTreeListCtrl(), wx.aui.AuiPaneInfo().Name("right_tree_list").CenterPane().Hide())
 
         self._mgr.Update()
 
@@ -46,7 +49,7 @@ class MainWindow(wx.Frame):
     def createToolBar(self):
         tb = wx.ToolBar(self, -1, wx.DefaultPosition, wx.DefaultSize,
                          wx.TB_FLAT | wx.TB_NODIVIDER | wx.TB_HORZ_TEXT)
-        tb.SetToolBitmapSize(wx.Size(16,16))
+        tb.SetToolBitmapSize(wx.Size(16, 16))
         tb_bmp1 = wx.ArtProvider_GetBitmap(wx.ART_NORMAL_FILE, wx.ART_OTHER, wx.Size(16, 16))
         tb.AddLabelTool(101, "Item 1", tb_bmp1)
         tb.AddLabelTool(101, "Item 2", tb_bmp1)
@@ -62,12 +65,12 @@ class MainWindow(wx.Frame):
         self.statusbar = self.CreateStatusBar(2, wx.ST_SIZEGRIP)
         self.statusbar.SetStatusWidths([-2, -3])
         self.statusbar.SetStatusText("Ready", 0)
-        self.statusbar.SetStatusText("Welcome To wxPython!", 1)
+        self.statusbar.SetStatusText("Welcome To MLook!", 1)
 
     def createMenuBar(self):
         mb = wx.MenuBar()
         file_menu = wx.Menu()
-        file_menu.Append(ID_SHOW_CONN_DIALOG,"Connect")
+        file_menu.Append(ID_SHOW_CONN_DIALOG, "Connect")
         file_menu.Append(wx.ID_EXIT, "Exit")
         self.Bind(wx.EVT_MENU, self.OnShowConnDialog, id=ID_SHOW_CONN_DIALOG)
 
@@ -78,39 +81,102 @@ class MainWindow(wx.Frame):
     def CreateTreeCtrl(self):
         self.db_info_tree = wx.TreeCtrl(self, -1, wx.Point(0, 0), wx.Size(160, 250),
                            wx.TR_DEFAULT_STYLE | wx.NO_BORDER)
+        
+        img_size = (16, 16)
+        imglist = wx.ImageList(img_size[0], img_size[1])
+        imglist.Add(wx.ArtProvider_GetBitmap(wx.ART_FOLDER, wx.ART_OTHER, img_size))
+        imglist.Add(wx.ArtProvider_GetBitmap(wx.ART_FILE_OPEN, wx.ART_OTHER, img_size))
+        imglist.Add(wx.ArtProvider_GetBitmap(wx.ART_NORMAL_FILE, wx.ART_OTHER, wx.Size(16, 16)))
+        self.db_info_tree.AssignImageList(imglist)
         return self.db_info_tree
 
-    def CreateGrid(self):
-        grid = wx.grid.Grid(self, -1, wx.Point(0, 0), wx.Size(150, 250),
-                            wx.NO_BORDER | wx.WANTS_CHARS)
-        grid.CreateGrid(10, 20)
+    def CreateTreeListCtrl(self):
+        self.table_data_tree = gizmos.TreeListCtrl(self, -1, style=wx.TR_DEFAULT_STYLE | wx.TR_FULL_ROW_HIGHLIGHT 
+                                                   | wx.TR_HIDE_ROOT | wx.TR_ROW_LINES | wx.TR_COLUMN_LINES)
+        
+        img_size = (16, 16)
+        imglist = wx.ImageList(img_size[0], img_size[1])
+        imglist.Add(wx.ArtProvider_GetBitmap(wx.ART_FOLDER, wx.ART_OTHER, img_size))
+        imglist.Add(wx.ArtProvider_GetBitmap(wx.ART_FILE_OPEN, wx.ART_OTHER, img_size))
+        imglist.Add(wx.ArtProvider_GetBitmap(wx.ART_NORMAL_FILE, wx.ART_OTHER, wx.Size(16, 16)))
+        self.table_data_tree.AssignImageList(imglist)
+        
+        self.table_data_tree.AddColumn("Key")
+        self.table_data_tree.AddColumn("Value")
+        self.table_data_tree.AddColumn("Type")
+        self.table_data_tree.SetMainColumn(0)
+        self.table_data_tree.SetColumnWidth(0, 175)
+        
+        self.table_data_tree_root = self.table_data_tree.AddRoot("Root")
+        self.table_data_tree.SetItemText(self.table_data_tree_root, "", 1)
+        self.table_data_tree.SetItemText(self.table_data_tree_root, "", 2)
+        
+        return self.table_data_tree
+        
 
-        return grid
-
-    def OnShowConnDialog(self,event):
-        dlg = ConnDBDialog(self,-1,"Connect Setting",size=(400, 200))
+    def OnShowConnDialog(self, event):
+        dlg = ConnDBDialog(self, -1, "Connect Setting", size=(400, 200))
         dlg.CenterOnScreen()
         val = dlg.ShowModal()
 
         if val == wx.ID_OK:
-            host,port,dbname = dlg.get_value()
-            db = get_conn(host,int(port),dbname)
-
-            img_size = (16,16)
-            imglist = wx.ImageList(img_size[0], img_size[1])
-            fldridx     = imglist.Add(wx.ArtProvider_GetBitmap(wx.ART_FOLDER,      wx.ART_OTHER, img_size))
-            fldropenidx = imglist.Add(wx.ArtProvider_GetBitmap(wx.ART_FILE_OPEN,   wx.ART_OTHER, img_size))
-            fileidx     = imglist.Add(wx.ArtProvider_GetBitmap(wx.ART_NORMAL_FILE, wx.ART_OTHER, img_size))
+            self.host = dlg.get_host()
+            self.port = dlg.get_port()
+            dbname = dlg.get_db()
             
-            self.db_info_tree.AssignImageList(imglist)
-
-            root = self.db_info_tree.AddRoot(host)
-            self.db_info_tree.SetItemImage(root, fldridx, wx.TreeItemIcon_Normal)
-            self.db_info_tree.SetItemImage(root, fldropenidx, wx.TreeItemIcon_Expanded)
-            for item in list(db.collection_names()):
-                self.db_info_tree.AppendItem(root,item,0)
+            self.db_info_tree.DeleteAllItems()
+            root = self.db_info_tree.AddRoot(self.host, 1, 0)
+            
+            if dbname:
+                db = get_db(self.host, self.port, dbname)
+                for item in list(db.collection_names()):
+                    child = self.db_info_tree.AppendItem(root, item, 2)
+                    self.db_info_tree.SetPyData(child, ('is_table'))
+            else:
+                conn = get_conn(self.host, self.port)
+                for item in conn.database_names():
+                    child = self.db_info_tree.AppendItem(root, item, 0)
+                    self.db_info_tree.SetItemImage(child, 1, wx.TreeItemIcon_Expanded)
+                    self.db_info_tree.SetPyData(child, ('is_db'))
+                    
             self.db_info_tree.Expand(root)
+            self.db_info_tree.Bind(wx.EVT_LEFT_DCLICK, self.OnLeftDClick)
         else:
             print("You pressed Cancel\n")
         dlg.Destroy()
+    
+    def OnLeftDClick(self, event):
+        pt = event.GetPosition();
+        node, flags = self.db_info_tree.HitTest(pt)
+        if node:
+            if self.db_info_tree.GetPyData(node) == 'is_db':
+                dbname = self.db_info_tree.GetItemText(node)
+                db = get_db(self.host, self.port, dbname)
+                self.db_info_tree.DeleteChildren(node)
+                for item in list(db.collection_names()):
+                    child = self.db_info_tree.AppendItem(node, item, 2)
+                    self.db_info_tree.SetPyData(child, ('is_table'))
+                self.db_info_tree.Expand(node)
+            elif self.db_info_tree.GetPyData(node) == 'is_table':
+                table_name = self.db_info_tree.GetItemText(node)
+                parent = self.db_info_tree.GetItemParent(node)
+                dbname = self.db_info_tree.GetItemText(parent)
+                db = get_db(self.host, self.port, dbname)
+                self._mgr.GetPane("right_html").Hide()
+                self._mgr.GetPane("right_tree_list").Show()
+                
+                query_result = list(db[table_name].find().limit(1000))
+                self.table_data_tree.DeleteChildren(self.table_data_tree_root)
+                for idx, item in enumerate(query_result):
+                    txt = "(%d) {...}" % idx 
+                    child = self.table_data_tree.AppendItem(self.table_data_tree_root, txt)
+                    self.table_data_tree.SetItemText(child, '', 1)
+                    self.table_data_tree.SetItemText(child, 'Document', 2)
+                    for k in item:
+                        last = self.table_data_tree.AppendItem(child, k)
+                        self.table_data_tree.SetItemText(last, str(item[k]), 1)
+                        self.table_data_tree.SetItemText(last, '', 2)
+                
+                self._mgr.Update()
+                
 
