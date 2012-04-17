@@ -43,7 +43,6 @@ class MainWindow(wx.Frame):
         return """\
             <html><body>
             <h1>MLook,mongodb client by wxpython</h1>
-            <a href="http://www.163.com">163</a>
             </body></html>
             """
 
@@ -128,12 +127,16 @@ class MainWindow(wx.Frame):
                 db = get_db(self.host, self.port, dbname)
                 db_item = self.db_info_tree.AppendItem(root, dbname, 0)
                 self.db_info_tree.SetItemImage(db_item, 1, wx.TreeItemIcon_Expanded)
-                for item in list(db.collection_names()):
+                table_names = list(db.collection_names())
+                table_names.sort()
+                for item in table_names:
                     child = self.db_info_tree.AppendItem(db_item, item, 2)
                     self.db_info_tree.SetPyData(child, ('is_table'))
             else:
                 conn = get_conn(self.host, self.port)
-                for item in conn.database_names():
+                db_names = conn.database_names()
+                db_names.sort()
+                for item in db_names:
                     child = self.db_info_tree.AppendItem(root, item, 0)
                     self.db_info_tree.SetItemImage(child, 1, wx.TreeItemIcon_Expanded)
                     self.db_info_tree.SetPyData(child, ('is_db'))
@@ -152,7 +155,9 @@ class MainWindow(wx.Frame):
                 dbname = self.db_info_tree.GetItemText(node)
                 db = get_db(self.host, self.port, dbname)
                 self.db_info_tree.DeleteChildren(node)
-                for item in list(db.collection_names()):
+                table_names = list(db.collection_names())
+                table_names.sort()
+                for item in table_names:
                     child = self.db_info_tree.AppendItem(node, item, 2)
                     self.db_info_tree.SetPyData(child, ('is_table'))
                 self.db_info_tree.Expand(node)
@@ -170,11 +175,11 @@ class MainWindow(wx.Frame):
                     txt = "(%d) {...}" % idx 
                     child = self.table_data_tree.AppendItem(self.table_data_tree_root, txt)
                     self.table_data_tree.SetItemText(child, '', 1)
-                    self.table_data_tree.SetItemText(child, 'Document', 2)
+                    self.table_data_tree.SetItemText(child, 'document', 2)
                     for k in item:
                         last = self.table_data_tree.AppendItem(child, k)
                         self.table_data_tree.SetItemText(last, str(item[k]), 1)
-                        self.table_data_tree.SetItemText(last, '', 2)
+                        self.table_data_tree.SetItemText(last, type(item[k]).__name__, 2)
                 
                 self._mgr.Update()
                 
