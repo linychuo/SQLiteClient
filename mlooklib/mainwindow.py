@@ -178,9 +178,7 @@ class MainWindow(wx.Frame):
                     self.table_data_tree.SetItemText(child, 'document', 2)
                     for k in item:
                         last = self.table_data_tree.AppendItem(child, k)
-                        self.table_data_tree.SetItemText(last, str(item[k]), 1)
+                        self.table_data_tree.SetItemText(last, unicode(item[k]), 1)
                         self.table_data_tree.SetItemText(last, type(item[k]).__name__, 2)
                 
                 self._mgr.Update()
-                
-
