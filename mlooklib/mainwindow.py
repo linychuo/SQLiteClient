@@ -33,16 +33,17 @@ class MainWindow(wx.Frame):
         self._mgr.Update()
 
     def CreateHTMLCtrl(self):
-        ctrl = wx.html.HtmlWindow(self, -1, wx.DefaultPosition, wx.Size(400, 300))
+        htmlCtrl = wx.html.HtmlWindow(self, -1, wx.DefaultPosition, wx.Size(400, 300),wx.html.HW_NO_SELECTION)
         if "gtk2" in wx.PlatformInfo:
-            ctrl.SetStandardFonts()
-        ctrl.SetPage(self.GetIntroText())        
-        return ctrl
+            htmlCtrl.SetStandardFonts()
+        htmlCtrl.SetPage(self.GetIntroText())
+        return htmlCtrl
 
     def GetIntroText(self):
         return """\
             <html><body>
             <h1>MLook,mongodb client by wxpython</h1>
+            <a href="http://www.163.com">163</a>
             </body></html>
             """
 
@@ -55,10 +56,7 @@ class MainWindow(wx.Frame):
         tb.AddLabelTool(101, "View", wx.ArtProvider_GetBitmap(wx.wx.ART_LIST_VIEW, wx.ART_TOOLBAR, wx.Size(16, 16)))
         #tb.AddSeparator()
         tb.Realize()
-        self._mgr.AddPane(tb, wx.aui.AuiPaneInfo().
-                          Name("tb").Caption("Sample Bookmark Toolbar").
-                          ToolbarPane().Top().Row(2).
-                          LeftDockable(False).RightDockable(False))
+        self._mgr.AddPane(tb, wx.aui.AuiPaneInfo().Name("tb").Caption("Toolbar").ToolbarPane().Top().Row(2).LeftDockable(False).RightDockable(False))
 
     def createStatusBar(self):
         self.statusbar = self.CreateStatusBar(2, wx.ST_SIZEGRIP)
