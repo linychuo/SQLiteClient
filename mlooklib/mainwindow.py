@@ -54,7 +54,6 @@ class MainWindow(wx.Frame):
         tb.AddLabelTool(101, "Find", wx.ArtProvider_GetBitmap(wx.ART_FIND,wx.ART_TOOLBAR, wx.Size(16, 16)))
         tb.AddLabelTool(101, "View", wx.ArtProvider_GetBitmap(wx.wx.ART_LIST_VIEW, wx.ART_TOOLBAR, wx.Size(16, 16)))
         #tb.AddSeparator()
-        #tb.AddLabelTool(101, "Item 5", tb_bmp1)
         tb.Realize()
         self._mgr.AddPane(tb, wx.aui.AuiPaneInfo().
                           Name("tb").Caption("Sample Bookmark Toolbar").
