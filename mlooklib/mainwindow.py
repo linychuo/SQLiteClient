@@ -50,11 +50,11 @@ class MainWindow(wx.Frame):
         tb = wx.ToolBar(self, -1, wx.DefaultPosition, wx.DefaultSize,
                          wx.TB_FLAT | wx.TB_NODIVIDER | wx.TB_HORZ_TEXT)
         tb.SetToolBitmapSize(wx.Size(16, 16))
-        tb_bmp1 = wx.ArtProvider_GetBitmap(wx.ART_NORMAL_FILE, wx.ART_OTHER, wx.Size(16, 16))
-        tb.AddLabelTool(101, "Item 1", tb_bmp1)
-        tb.AddLabelTool(101, "Item 2", tb_bmp1)
-        tb.AddSeparator()
-        tb.AddLabelTool(101, "Item 5", tb_bmp1)
+        
+        tb.AddLabelTool(101, "Find", wx.ArtProvider_GetBitmap(wx.ART_FIND,wx.ART_TOOLBAR, wx.Size(16, 16)))
+        tb.AddLabelTool(101, "View", wx.ArtProvider_GetBitmap(wx.wx.ART_LIST_VIEW, wx.ART_TOOLBAR, wx.Size(16, 16)))
+        #tb.AddSeparator()
+        #tb.AddLabelTool(101, "Item 5", tb_bmp1)
         tb.Realize()
         self._mgr.AddPane(tb, wx.aui.AuiPaneInfo().
                           Name("tb").Caption("Sample Bookmark Toolbar").
@@ -105,7 +105,7 @@ class MainWindow(wx.Frame):
         self.table_data_tree.AddColumn("Value")
         self.table_data_tree.AddColumn("Type")
         self.table_data_tree.SetMainColumn(0)
-        self.table_data_tree.SetColumnWidth(0, 175)
+        self.table_data_tree.SetColumnWidth(0, 200)
         
         self.table_data_tree_root = self.table_data_tree.AddRoot("Root")
         self.table_data_tree.SetItemText(self.table_data_tree_root, "", 1)
@@ -129,8 +129,10 @@ class MainWindow(wx.Frame):
             
             if dbname:
                 db = get_db(self.host, self.port, dbname)
+                db_item = self.db_info_tree.AppendItem(root, dbname, 0)
+                self.db_info_tree.SetItemImage(db_item, 1, wx.TreeItemIcon_Expanded)
                 for item in list(db.collection_names()):
-                    child = self.db_info_tree.AppendItem(root, item, 2)
+                    child = self.db_info_tree.AppendItem(db_item, item, 2)
                     self.db_info_tree.SetPyData(child, ('is_table'))
             else:
                 conn = get_conn(self.host, self.port)
