@@ -2,7 +2,8 @@ import wx
 import wx.aui
 import wx.grid
 import wx.html
-import  wx.gizmos as gizmos
+import wx.gizmos as gizmos
+import wx.lib.agw.flatnotebook as fnb
 
 from mydialog import ConnDBDialog
 from dbutil import *
@@ -23,12 +24,19 @@ class MainWindow(wx.Frame):
         self.createMenuBar()
         self.createStatusBar()
         self.createToolBar()
+        self.CreateLeft()
         self.host = ''
         self.port = 0
 
-        self._mgr.AddPane(self.CreateTreeCtrl(), wx.aui.AuiPaneInfo().Name("left").Caption("DB info").Left().Layer(1).Position(1).CloseButton(True).MaximizeButton(True))
-        self._mgr.AddPane(self.CreateHTMLCtrl(), wx.aui.AuiPaneInfo().Name("right_html").CenterPane())
-        self._mgr.AddPane(self.CreateTreeListCtrl(), wx.aui.AuiPaneInfo().Name("right_tree_list").CenterPane().Hide())
+        self._mgr.AddPane(self.db_info_tree, wx.aui.AuiPaneInfo().Name("left").Caption("DB info").Left().Layer(1).Position(1).CloseButton(True).MaximizeButton(True))
+
+        bookStyle = fnb.FNB_NODRAG
+        bookStyle &= ~(fnb.FNB_NODRAG)
+        bookStyle |= fnb.FNB_ALLOW_FOREIGN_DND 
+        self.right_panel = fnb.FlatNotebook(self, wx.ID_ANY, agwStyle=bookStyle)
+
+        self._mgr.AddPane(self.right_panel,wx.aui.AuiPaneInfo().Name("right").CenterPane())
+        self.right_panel.AddPage(self.CreateHTMLCtrl(), "Start page")#default open start page
 
         self._mgr.Update()
 
@@ -74,7 +82,7 @@ class MainWindow(wx.Frame):
 
         self.SetMenuBar(mb)
 
-    def CreateTreeCtrl(self):
+    def CreateLeft(self):
         self.db_info_tree = wx.TreeCtrl(self, -1, wx.Point(0, 0), wx.Size(160, 250),
                            wx.TR_DEFAULT_STYLE | wx.NO_BORDER)
         
@@ -82,11 +90,10 @@ class MainWindow(wx.Frame):
         imglist = wx.ImageList(img_size[0], img_size[1])
         imglist.Add(wx.ArtProvider_GetBitmap(wx.ART_FOLDER, wx.ART_OTHER, img_size))
         imglist.Add(wx.ArtProvider_GetBitmap(wx.ART_FILE_OPEN, wx.ART_OTHER, img_size))
-        imglist.Add(wx.ArtProvider_GetBitmap(wx.ART_NORMAL_FILE, wx.ART_OTHER, wx.Size(16, 16)))
+        imglist.Add(wx.ArtProvider_GetBitmap(wx.ART_NORMAL_FILE, wx.ART_OTHER, img_size))
         self.db_info_tree.AssignImageList(imglist)
-        return self.db_info_tree
 
-    def CreateTreeListCtrl(self):
+    def ShowTableData(self,tablename):
         self.table_data_tree = gizmos.TreeListCtrl(self, -1, style=wx.TR_DEFAULT_STYLE | wx.TR_FULL_ROW_HIGHLIGHT 
                                                    | wx.TR_HIDE_ROOT | wx.TR_ROW_LINES | wx.TR_COLUMN_LINES)
         
@@ -94,7 +101,7 @@ class MainWindow(wx.Frame):
         imglist = wx.ImageList(img_size[0], img_size[1])
         imglist.Add(wx.ArtProvider_GetBitmap(wx.ART_FOLDER, wx.ART_OTHER, img_size))
         imglist.Add(wx.ArtProvider_GetBitmap(wx.ART_FILE_OPEN, wx.ART_OTHER, img_size))
-        imglist.Add(wx.ArtProvider_GetBitmap(wx.ART_NORMAL_FILE, wx.ART_OTHER, wx.Size(16, 16)))
+        imglist.Add(wx.ArtProvider_GetBitmap(wx.ART_NORMAL_FILE, wx.ART_OTHER, img_size))
         self.table_data_tree.AssignImageList(imglist)
         
         self.table_data_tree.AddColumn("Key")
@@ -106,8 +113,8 @@ class MainWindow(wx.Frame):
         self.table_data_tree_root = self.table_data_tree.AddRoot("Root")
         self.table_data_tree.SetItemText(self.table_data_tree_root, "", 1)
         self.table_data_tree.SetItemText(self.table_data_tree_root, "", 2)
-        
-        return self.table_data_tree
+  
+        self.right_panel.AddPage(self.table_data_tree, tablename)
         
 
     def OnShowConnDialog(self, event):
@@ -166,8 +173,6 @@ class MainWindow(wx.Frame):
                 parent = self.db_info_tree.GetItemParent(node)
                 dbname = self.db_info_tree.GetItemText(parent)
                 db = get_db(self.host, self.port, dbname)
-                self._mgr.GetPane("right_html").Hide()
-                self._mgr.GetPane("right_tree_list").Show()
                 
                 query_result = list(db[table_name].find().limit(1000))
                 self.table_data_tree.DeleteChildren(self.table_data_tree_root)
@@ -180,5 +185,6 @@ class MainWindow(wx.Frame):
                         last = self.table_data_tree.AppendItem(child, k)
                         self.table_data_tree.SetItemText(last, unicode(item[k]), 1)
                         self.table_data_tree.SetItemText(last, type(item[k]).__name__, 2)
-                
-                self._mgr.Update()
+
+                self.ShowTableData(table_name)
+                #self._mgr.Update()
