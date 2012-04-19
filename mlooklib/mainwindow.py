@@ -175,6 +175,8 @@ class MainWindow(wx.Frame):
                 db = get_db(self.host, self.port, dbname)
                 
                 query_result = list(db[table_name].find().limit(1000))
+                self.ShowTableData(table_name)
+
                 self.table_data_tree.DeleteChildren(self.table_data_tree_root)
                 for idx, item in enumerate(query_result):
                     txt = "(%d) {...}" % idx 
@@ -185,6 +187,3 @@ class MainWindow(wx.Frame):
                         last = self.table_data_tree.AppendItem(child, k)
                         self.table_data_tree.SetItemText(last, unicode(item[k]), 1)
                         self.table_data_tree.SetItemText(last, type(item[k]).__name__, 2)
-
-                self.ShowTableData(table_name)
-                #self._mgr.Update()
