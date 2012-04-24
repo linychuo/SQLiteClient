@@ -5,11 +5,12 @@ import wx.html
 import wx.gizmos as gizmos
 import wx.lib.agw.flatnotebook as fnb
 
-from mydialog import ConnDBDialog
+from mydialog import ConnDBDialog,QueryDialog
 from dbutil import *
 
 
 ID_SHOW_CONN_DIALOG = wx.NewId()
+ID_SHOW_QUERY_DIALOG = wx.NewId()
 
 class MainWindow(wx.Frame):
     def __init__(self, parent, id= -1, title="", pos=wx.DefaultPosition,
@@ -60,9 +61,10 @@ class MainWindow(wx.Frame):
         tb.SetToolBitmapSize(wx.Size(16, 16))
         
         tb.AddLabelTool(101, "Find", wx.ArtProvider_GetBitmap(wx.ART_FIND,wx.ART_TOOLBAR, wx.Size(16, 16)))
-        tb.AddLabelTool(101, "View", wx.ArtProvider_GetBitmap(wx.wx.ART_LIST_VIEW, wx.ART_TOOLBAR, wx.Size(16, 16)))
+        tb.AddLabelTool(102, "View", wx.ArtProvider_GetBitmap(wx.wx.ART_LIST_VIEW, wx.ART_TOOLBAR, wx.Size(16, 16)))
         #tb.AddSeparator()
         tb.Realize()
+        self.Bind(wx.EVT_TOOL,self.OnShowQueryDialog,id=101)
         self._mgr.AddPane(tb, wx.aui.AuiPaneInfo().Name("tb").Caption("Toolbar").ToolbarPane().Top().Row(2).LeftDockable(False).RightDockable(False))
 
     def createStatusBar(self):
@@ -77,9 +79,7 @@ class MainWindow(wx.Frame):
         file_menu.Append(ID_SHOW_CONN_DIALOG, "Connect")
         file_menu.Append(wx.ID_EXIT, "Exit")
         self.Bind(wx.EVT_MENU, self.OnShowConnDialog, id=ID_SHOW_CONN_DIALOG)
-
         mb.Append(file_menu, "File")
-
         self.SetMenuBar(mb)
 
     def CreateLeft(self):
@@ -117,8 +117,13 @@ class MainWindow(wx.Frame):
         self.right_panel.AddPage(self.table_data_tree, tablename)
         
 
+    def OnShowQueryDialog(self,event):
+        dlg = QueryDialog(self,-1)
+        dlg.CenterOnScreen()
+        val = dlg.ShowModal()
+
     def OnShowConnDialog(self, event):
-        dlg = ConnDBDialog(self, -1, "Connect Setting", size=(400, 200))
+        dlg = ConnDBDialog(self, -1)
         dlg.CenterOnScreen()
         val = dlg.ShowModal()
 
