@@ -10,7 +10,8 @@ from dbutil import *
 
 
 ID_SHOW_CONN_DIALOG = wx.NewId()
-ID_SHOW_QUERY_DIALOG = wx.NewId()
+ID_TOOL_BAR_FIND = wx.NewId()
+ID_TOOL_BAR_VIEW = wx.NewId()
 
 class MainWindow(wx.Frame):
     def __init__(self, parent, id= -1, title="", pos=wx.DefaultPosition,
@@ -56,16 +57,16 @@ class MainWindow(wx.Frame):
             """
 
     def createToolBar(self):
-        tb = wx.ToolBar(self, -1, wx.DefaultPosition, wx.DefaultSize,
+        self.tb = wx.ToolBar(self, -1, wx.DefaultPosition, wx.DefaultSize,
                          wx.TB_FLAT | wx.TB_NODIVIDER | wx.TB_HORZ_TEXT)
-        tb.SetToolBitmapSize(wx.Size(16, 16))
-        
-        tb.AddLabelTool(101, "Find", wx.ArtProvider_GetBitmap(wx.ART_FIND,wx.ART_TOOLBAR, wx.Size(16, 16)))
-        tb.AddLabelTool(102, "View", wx.ArtProvider_GetBitmap(wx.wx.ART_LIST_VIEW, wx.ART_TOOLBAR, wx.Size(16, 16)))
+        self.tb.SetToolBitmapSize(wx.Size(16, 16))
+        self.tb.AddLabelTool(ID_TOOL_BAR_FIND, "Find", wx.ArtProvider_GetBitmap(wx.ART_FIND,wx.ART_TOOLBAR, wx.Size(16, 16)))
+        self.tb.AddLabelTool(ID_TOOL_BAR_VIEW, "View", wx.ArtProvider_GetBitmap(wx.wx.ART_LIST_VIEW, wx.ART_TOOLBAR, wx.Size(16, 16)))
         #tb.AddSeparator()
-        tb.Realize()
-        self.Bind(wx.EVT_TOOL,self.OnShowQueryDialog,id=101)
-        self._mgr.AddPane(tb, wx.aui.AuiPaneInfo().Name("tb").Caption("Toolbar").ToolbarPane().Top().Row(2).LeftDockable(False).RightDockable(False))
+        self.tb.Realize()
+        self.Bind(wx.EVT_TOOL,self.OnShowQueryDialog,id=ID_TOOL_BAR_FIND)
+        self.tb.EnableTool(ID_TOOL_BAR_FIND,False)
+        self._mgr.AddPane(self.tb, wx.aui.AuiPaneInfo().Name("tb").Caption("Toolbar").ToolbarPane().Top().Row(2).LeftDockable(False).RightDockable(False))
 
     def createStatusBar(self):
         self.statusbar = self.CreateStatusBar(2, wx.ST_SIZEGRIP)
@@ -94,7 +95,9 @@ class MainWindow(wx.Frame):
         self.db_info_tree.AssignImageList(imglist)
 
     def ShowTableData(self,tablename):
-        self.table_data_tree = gizmos.TreeListCtrl(self, -1, style=wx.TR_DEFAULT_STYLE | wx.TR_FULL_ROW_HIGHLIGHT 
+        panel = wx.Panel(self.right_panel)
+        controlBox = wx.BoxSizer(wx.HORIZONTAL)
+        self.table_data_tree = gizmos.TreeListCtrl(panel, -1, style=wx.TR_DEFAULT_STYLE | wx.TR_FULL_ROW_HIGHLIGHT 
                                                    | wx.TR_HIDE_ROOT | wx.TR_ROW_LINES | wx.TR_COLUMN_LINES)
         
         img_size = (16, 16)
@@ -114,13 +117,24 @@ class MainWindow(wx.Frame):
         self.table_data_tree.SetItemText(self.table_data_tree_root, "", 1)
         self.table_data_tree.SetItemText(self.table_data_tree_root, "", 2)
   
-        self.right_panel.AddPage(self.table_data_tree, tablename)
+        panel.setSizer(controlBox)
+        self.right_panel.AddPage(panel, tablename)
         
 
     def OnShowQueryDialog(self,event):
         dlg = QueryDialog(self,-1)
         dlg.CenterOnScreen()
         val = dlg.ShowModal()
+
+        cur_tree_item = self.current_selected_item
+        cur_tree_item_parent = self.db_info_tree.GetItemParent(cur_tree_item)
+        
+        dbname = self.db_info_tree.GetItemText(cur_tree_item_parent)
+        tablename = self.db_info_tree.GetItemText(cur_tree_item)
+
+        if val == wx.ID_OK:
+            query_txt = dlg.get_query_txt()
+            get_db(self.host,self.port,dbname)
 
     def OnShowConnDialog(self, event):
         dlg = ConnDBDialog(self, -1)
@@ -155,24 +169,36 @@ class MainWindow(wx.Frame):
                     
             self.db_info_tree.Expand(root)
             self.db_info_tree.Bind(wx.EVT_LEFT_DCLICK, self.OnLeftDClick)
+            self.Bind(wx.EVT_TREE_SEL_CHANGED, self.EVT_TREE_ITEM_ACTIVATED, self.db_info_tree)
         else:
             print("You pressed Cancel\n")
         dlg.Destroy()
-    
+
+    def EVT_TREE_ITEM_ACTIVATED(self,event):
+        node = event.GetItem()
+        self.current_selected_item = node
+        if self.db_info_tree.GetPyData(node) == 'is_table':
+            self.tb.EnableTool(ID_TOOL_BAR_FIND,True)
+        else:
+            self.tb.EnableTool(ID_TOOL_BAR_FIND,False)
+
     def OnLeftDClick(self, event):
         pt = event.GetPosition();
         node, flags = self.db_info_tree.HitTest(pt)
         if node:
             if self.db_info_tree.GetPyData(node) == 'is_db':
-                dbname = self.db_info_tree.GetItemText(node)
-                db = get_db(self.host, self.port, dbname)
-                self.db_info_tree.DeleteChildren(node)
-                table_names = list(db.collection_names())
-                table_names.sort()
-                for item in table_names:
-                    child = self.db_info_tree.AppendItem(node, item, 2)
-                    self.db_info_tree.SetPyData(child, ('is_table'))
-                self.db_info_tree.Expand(node)
+                if self.db_info_tree.IsExpanded(node):
+                    self.db_info_tree.Collapse(node)
+                else:
+                    dbname = self.db_info_tree.GetItemText(node)
+                    db = get_db(self.host, self.port, dbname)
+                    self.db_info_tree.DeleteChildren(node)
+                    table_names = list(db.collection_names())
+                    table_names.sort()
+                    for item in table_names:
+                        child = self.db_info_tree.AppendItem(node, item, 2)
+                        self.db_info_tree.SetPyData(child, ('is_table'))
+                    self.db_info_tree.Expand(node)
             elif self.db_info_tree.GetPyData(node) == 'is_table':
                 table_name = self.db_info_tree.GetItemText(node)
                 parent = self.db_info_tree.GetItemParent(node)
