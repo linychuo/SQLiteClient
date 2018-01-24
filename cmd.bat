@@ -25,30 +25,30 @@ goto :eof
 
 :activate
 if not exist "%~dp0.env\Scripts\activate.bat" call:init
-call "%~dp0.env\Scripts\activate.bat"
+call %~dp0.env\Scripts\activate.bat
 goto :eof
 
 :deactivate
 if exist "%~dp0.env\Scripts\deactivate.bat" (
-call "%~dp0.env\Scripts\deactivate.bat"
+call %~dp0.env\Scripts\deactivate.bat
 )
 goto :eof
 
 :prepare
 if not exist "%~dp0.env\Scripts\pip.exe" call:activate
-call "%~dp0.env\Scripts\pip.exe install -r requirements.txt"
+call %~dp0.env\Scripts\pip.exe install -r requirements.txt
 goto :eof
 
 :build
 if not exist "%~dp0.env\Scripts\pyinstaller.exe" call:prepare
-call "%~dp0.env\Scripts\pyinstaller.exe app.spec"
+call %~dp0.env\Scripts\pyinstaller.exe app.spec
 goto :eof
 
 :fmt
 if not exist "%~dp0.env\Scripts\yapf.exe" call:prepare
 for %%d in (*.py) do (
 	echo formating... %%d
-	call "%~dp0.env\Scripts\yapf.exe -i %%d"
+	call %~dp0.env\Scripts\yapf.exe -i %%d
 )
 goto :eof
 
