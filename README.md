@@ -1,4 +1,4 @@
-#SQLite client tool
+# SQLite client tool
 
 ## 界面设计 
 1. 读取配置文件，如果用户没有打开过任何的sqlite数据库文件，则“弹窗”要求用户选择sqlite数据库文件，否则打开列表，展示打开过的sqlite数据库文件，让用户选择

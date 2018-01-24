@@ -2,21 +2,21 @@
 set ACTION=%~1
 
 if "init" == "%ACTION%" (
-goto:init
+	goto :init
 ) else if "active" == "%ACTION%" (
-goto:activate
+	goto :activate
 ) else if "deactive" == "%ACTION%" (
-goto:deactivate
+	goto :deactivate
 ) else if "prepare" == "%ACTION%" (
-goto:prepare
+	goto :prepare
 ) else if "build" == "%ACTION%" (
-goto:build
+	goto :build
 ) else if "fmt" == "%ACTION%" (
-goto:fmt
+	goto :fmt
 ) else if "clean" == "%ACTION%" (
-goto:clean
+	goto :clean
 ) else (
-goto:usage
+	goto :usage
 )
 
 :init
