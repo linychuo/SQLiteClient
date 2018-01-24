@@ -1,46 +1,54 @@
 @echo off
+set ACTION=%~1
 
-if "%1" == ""				goto usage
-
-if /i %1 == init     		goto init
-if /i %1 == active     		goto activate
-if /i %1 == deactive		goto deactivate
-if /i %1 == prepare 		goto prepare
-if /i %1 == build   		goto build
-if /i %1 == fmt     		goto fmt
-if /i %1 == clean			goto clean
-goto usage
+if "init" == "%ACTION%" (
+goto:init
+) else if "active" == "%ACTION%" (
+goto:activate
+) else if "deactive" == "%ACTION%" (
+goto:deactivate
+) else if "prepare" == "%ACTION%" (
+goto:prepare
+) else if "build" == "%ACTION%" (
+goto:build
+) else if "fmt" == "%ACTION%" (
+goto:fmt
+) else if "clean" == "%ACTION%" (
+goto:clean
+) else (
+goto:usage
+)
 
 :init
 virtualenv .env
 goto :eof
 
 :activate
-if not exist "%~dp0.env\Scripts\activate.bat" call :init
-%~dp0.env\Scripts\activate.bat
+if not exist "%~dp0.env\Scripts\activate.bat" call:init
+call "%~dp0.env\Scripts\activate.bat"
 goto :eof
 
 :deactivate
 if exist "%~dp0.env\Scripts\deactivate.bat" (
-	%~dp0.env\Scripts\deactivate.bat
+call "%~dp0.env\Scripts\deactivate.bat"
 )
 goto :eof
 
 :prepare
-if not exist "%~dp0.env\Scripts\pip.exe" call :activate
-%~dp0.env\Scripts\pip.exe install -r requirements.txt
+if not exist "%~dp0.env\Scripts\pip.exe" call:activate
+call "%~dp0.env\Scripts\pip.exe install -r requirements.txt"
 goto :eof
 
 :build
-if not exist "%~dp0.env\Scripts\pyinstaller.exe" call :prepare
-%~dp0.env\Scripts\pyinstaller.exe app.spec
+if not exist "%~dp0.env\Scripts\pyinstaller.exe" call:prepare
+call "%~dp0.env\Scripts\pyinstaller.exe app.spec"
 goto :eof
 
 :fmt
-if not exist "%~dp0.env\Scripts\yapf.exe" call :prepare
+if not exist "%~dp0.env\Scripts\yapf.exe" call:prepare
 for %%d in (*.py) do (
 	echo formating... %%d
-	%~dp0.env\Scripts\yapf.exe -i %%d
+	call "%~dp0.env\Scripts\yapf.exe -i %%d"
 )
 goto :eof
 
