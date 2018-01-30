@@ -1,83 +1,116 @@
 # -*- coding=utf-8 -*-
 
 import wx
+import sqlite3
+from wx import aui
+
+from body_right import SQLEditor
+
+
+class LeftBar(wx.Panel):
+    def __init__(self, parent, db_fp):
+        super(LeftBar, self).__init__(
+            parent, style=wx.TAB_TRAVERSAL | wx.CLIP_CHILDREN)
+        self.db_fp = db_fp
+
+        self.tree = wx.TreeCtrl(self, -1, wx.Point(0, 0), wx.Size(160, 250),
+                                wx.TR_DEFAULT_STYLE | wx.NO_BORDER)
+        img_list = wx.ImageList(16, 16, True, 2)
+        img_list.Add(
+            wx.ArtProvider.GetBitmap(wx.ART_FOLDER, wx.ART_OTHER,
+                                     wx.Size(16, 16)))
+        img_list.Add(
+            wx.ArtProvider.GetBitmap(wx.ART_NORMAL_FILE, wx.ART_OTHER,
+                                     wx.Size(16, 16)))
+        self.tree.AssignImageList(img_list)
+        self.tree.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.on_node_activated)
+
+        root = self.tree.AddRoot(self.db_fp, 0)
+        self.tree.AppendItem(root, u'表', 0, data='TABLES')
+        self.tree.Expand(root)
+
+        main_sizer = wx.BoxSizer(wx.VERTICAL)
+        main_sizer.Add(self.tree, 1, wx.EXPAND)
+        self.SetSizer(main_sizer)
+
+    def on_node_activated(self, evt):
+        selected_item_data = self.tree.GetItemData(evt.GetItem())
+        if 'TABLES' == selected_item_data:
+            with sqlite3.connect(self.db_fp) as conn:
+                for row in conn.execute(
+                        "select name from sqlite_master where type = 'table'"):
+                    self.tree.AppendItem(
+                        evt.GetItem(), row[0], 1, data='TABLE')
+                self.tree.Expand(evt.GetItem())
+        elif 'TABLE' == selected_item_data:
+            selected_item_text = self.tree.GetItemText(evt.GetItem())
+            # open tab page
 
 
 class MainFrame(wx.Frame):
-    def __init__(self, app):
+    def __init__(self, app, db_fp):
         super(MainFrame, self).__init__(
-            parent=None, title=u'SQLiteClient', size=(800, 600))
+            parent=None, title=app.get_app_name(), size=(800, 600))
+        self.db_fp = db_fp
         self.app = app
 
-        # create a panel in the frame
-        pnl = wx.Panel(self)
+        self.SetMinSize((640, 480))
+        self.allowAuiFloating = False
 
-        # and put some text with a larger bold font on it
-        st = wx.StaticText(pnl, label="Hello World!", pos=(25, 25))
-        font = st.GetFont()
-        font.PointSize += 10
-        font = font.Bold()
-        st.SetFont(font)
-
-        # create a menu bar
-        self.makeMenuBar()
-
-        # and a status bar
+        self.create_menu_bar()
         self.CreateStatusBar()
-        self.SetStatusText("Welcome to wxPython!")
+        self.SetStatusText("Welcome!")
 
-    def makeMenuBar(self):
-        """
-        A menu bar is composed of menus, which are composed of menu items.
-        This method builds a set of menus and binds handlers to be called
-        when the menu item is selected.
-        """
+        self.main_panel = wx.Panel(self)
+        self.left_bar = LeftBar(self.main_panel, self.db_fp)
+        self.right_body = aui.AuiNotebook(
+            self.main_panel, -1, style=wx.CLIP_CHILDREN)
+        self.right_body.AddPage(SQLEditor(self.right_body, self), "Welcome")
+        self.logger = wx.TextCtrl(
+            self.main_panel,
+            -1,
+            style=wx.TE_MULTILINE | wx.TE_READONLY | wx.HSCROLL)
 
-        # Make a file menu with Hello and Exit items
+        self.mgr = aui.AuiManager()
+        self.mgr.SetManagedWindow(self.main_panel)
+        self.mgr.AddPane(self.right_body,
+                         aui.AuiPaneInfo().CenterPane().Name("Notebook"))
+        self.mgr.AddPane(self.left_bar,
+                         aui.AuiPaneInfo().Left().Layer(2).BestSize(
+                             (240, -1)).MinSize((240, -1)).Floatable(
+                                 self.allowAuiFloating).FloatingSize(
+                                     (240, 700)).Caption("DB")
+                         .CloseButton(False).Name("Tree"))
+        self.mgr.AddPane(self.logger,
+                         aui.AuiPaneInfo().Bottom().BestSize(
+                             (-1, 150)).MinSize((-1, 140)).Floatable(
+                                 self.allowAuiFloating).FloatingSize(
+                                     (500, 160)).Caption("Log Messages")
+                         .CloseButton(False).Name("LogWindow"))
+        self.Center(wx.BOTH)
+        self.mgr.Update()
+        self.Bind(wx.EVT_CLOSE, self.on_exit)
+
+    def create_menu_bar(self):
         fileMenu = wx.Menu()
-        # The "\t..." syntax defines an accelerator key that also triggers
-        # the same event
-        helloItem = fileMenu.Append(
-            -1, "&Hello...\tCtrl-H",
-            "Help string shown in status bar for this menu item")
-        fileMenu.AppendSeparator()
-        # When using a stock ID we don't need to specify the menu item's
-        # label
         exitItem = fileMenu.Append(wx.ID_EXIT)
-
-        # Now a help menu for the about item
         helpMenu = wx.Menu()
         aboutItem = helpMenu.Append(wx.ID_ABOUT)
-
-        # Make the menu bar and add the two menus to it. The '&' defines
-        # that the next letter is the "mnemonic" for the menu item. On the
-        # platforms that support it those letters are underlined and can be
-        # triggered from the keyboard.
         menuBar = wx.MenuBar()
         menuBar.Append(fileMenu, "&File")
         menuBar.Append(helpMenu, "&Help")
-
-        # Give the menu bar to the frame
         self.SetMenuBar(menuBar)
 
-        # Finally, associate a handler function with the EVT_MENU event for
-        # each of the menu items. That means that when that menu item is
-        # activated then the associated handler function will be called.
-        self.Bind(wx.EVT_MENU, self.OnHello, helloItem)
-        self.Bind(wx.EVT_MENU, self.OnExit, exitItem)
-        self.Bind(wx.EVT_MENU, self.OnAbout, aboutItem)
+        self.Bind(wx.EVT_MENU, self.on_exit, exitItem)
+        self.Bind(wx.EVT_MENU, self.on_about, aboutItem)
 
-        self.Center()
+    def on_exit(self, event):
+        self.mgr.UnInit()
+        self.Destroy()
 
-    def OnExit(self, event):
-        """Close the frame, terminating the application."""
-        self.Close(True)
-
-    def OnHello(self, event):
-        """Say hello to the user."""
-        wx.MessageBox("Hello again from wxPython")
-
-    def OnAbout(self, event):
-        """Display an About Dialog"""
+    def on_about(self, event):
         wx.MessageBox("This is a wxPython Hello World sample",
                       "About Hello World 2", wx.OK | wx.ICON_INFORMATION)
+
+    def log(self, message):
+        self.logger.AppendText(message + "\n")

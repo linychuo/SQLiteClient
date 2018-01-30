@@ -1,5 +1,6 @@
 # -*- coding=utf-8 -*-
 import wx
+from os.path import isfile, getsize
 
 from evt import ForwardMainEvent
 """
@@ -7,10 +8,22 @@ from evt import ForwardMainEvent
 """
 
 
+def is_sqlite3_db(filename):
+    if not isfile(filename):
+        return False
+    if getsize(filename) < 100:  # SQLite database file header is 100 bytes
+        return False
+
+    with open(filename, 'rb') as fd:
+        header = fd.read(100)
+
+    return header[:15] == b'SQLite format 3'
+
+
 class SelectDBFileFrame(wx.Frame):
     def __init__(self, app):
         super(SelectDBFileFrame, self).__init__(
-            parent=None, title=u'SQLiteClient', size=(300, 450))
+            parent=None, title=app.get_app_name(), size=(300, 450))
         self.app = app
 
         panel = wx.Panel(self)
@@ -21,9 +34,10 @@ class SelectDBFileFrame(wx.Frame):
         main_sizer.Add(tip, pos=(0, 0), span=(0, 3))
 
         # listbox
-        self.history_list = wx.ListBox(panel, style=wx.LB_SINGLE)
-        main_sizer.Add(
-            self.history_list, pos=(1, 0), span=(1, 3), flag=wx.EXPAND)
+        history_list = wx.ListBox(
+            panel, choices=self.app.read_file_history(), style=wx.LB_SINGLE)
+        history_list.Bind(wx.EVT_LISTBOX_DCLICK, self.on_item_click)
+        main_sizer.Add(history_list, pos=(1, 0), span=(1, 3), flag=wx.EXPAND)
 
         btn1 = wx.Button(panel, label=u'选择...', size=(80, 30))
         btn1.Bind(wx.EVT_BUTTON, self.on_select_file)
@@ -46,11 +60,12 @@ class SelectDBFileFrame(wx.Frame):
 
         self.Center()
 
-    def add_history(self, evt):
-        pass
-
     def on_exit(self, evt):
         self.Destroy()
+
+    def on_item_click(self, evt):
+        selected_item = evt.GetString()
+        self.forward_next_frame(selected_item)
 
     def on_select_file(self, evt):
         with wx.FileDialog(
@@ -63,11 +78,18 @@ class SelectDBFileFrame(wx.Frame):
                 return  # the user changed their mind
 
             pathname = fileDialog.GetPath()
-            try:
-                # forward main page
+            self.forward_next_frame(pathname)
+
+    def forward_next_frame(self, pathname):
+        try:
+            if is_sqlite3_db(pathname):
+                self.app.write_file_history(pathname)
                 self.Destroy()
-                wx.PostEvent(self.app, ForwardMainEvent(attr1=pathname))
-                # with open(pathname, 'r') as file:
-                #     pass
-            except IOError:
-                wx.LogError("Cannot open file '%s'." % pathname)
+                wx.PostEvent(
+                    self.app, ForwardMainEvent(selected_file=pathname))
+            else:
+                wx.MessageBox(u'选择的文件不是sqlite3数据文件，请重新选择!', u'错误',
+                              wx.OK | wx.ICON_ERROR)
+        except IOError as e:
+            print(e)
+            wx.LogError("Cannot open file '%s'." % pathname)
