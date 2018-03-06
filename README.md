@@ -20,6 +20,6 @@ where [command] is one of:
   deactive              deactive virtual env
   prepare               install all dependencies
   build                 package exe file
-  fmt                   format all py files
+  fmt                   formatting all py files
   clean                 clean
 ```

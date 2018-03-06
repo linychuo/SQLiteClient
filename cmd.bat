@@ -47,7 +47,7 @@ goto :eof
 :fmt
 if not exist "%~dp0.env\Scripts\yapf.exe" call:prepare
 for %%d in (*.py) do (
-	echo formating... %%d
+	echo formatting... %%d
 	call %~dp0.env\Scripts\yapf.exe -i %%d
 )
 goto :eof
