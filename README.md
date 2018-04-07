@@ -5,7 +5,7 @@
 - pyinstaller
 - yapf
 
-## Devlopment
+## Development
 1. Clone this repository
 ```bash
 git clone https://github.com/linychuo/SQLiteClient.git

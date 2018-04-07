@@ -1,4 +1,7 @@
 # -*- coding=utf-8 -*-
+"""
+SQL editor of main frame
+"""
 import wx
 import wx.stc as stc
 

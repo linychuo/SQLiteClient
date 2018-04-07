@@ -2,7 +2,7 @@
 import wx
 from os.path import isfile, getsize
 
-from evt import ForwardMainEvent
+from events import ForwardMainEvent
 """
 工具中第一个界面：展示所打开过的数据库，同时可选择新的数据库文件
 """

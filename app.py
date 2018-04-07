@@ -1,17 +1,23 @@
 # -*- coding=utf-8 -*-
+"""
+Main application
+"""
 import os
 
 import wx
 
-from evt import EVT_FORWARD_MAIN_EVENT
+from events import EVT_FORWARD_MAIN_EVENT
 from main import MainFrame
-from select_db import SelectDBFileFrame
+from wizard import SelectDBFileFrame
 
 __VERSION__ = '1.0.0'
 __APP_NAME__ = 'SQLiteClient'
 
 
 def read_conf_file(fp):
+    """
+    Read configuration from file
+    """
     with open(fp) as f:
         return f.readlines()
 

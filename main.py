@@ -1,15 +1,17 @@
 # -*- coding=utf-8 -*-
-
+"""
+Main frame
+"""
 import wx
 import sqlite3
 from wx import aui
 
-from body_right import SQLEditor
+from sql_editor import SQLEditor
 
 
-class LeftBar(wx.Panel):
+class SideBar(wx.Panel):
     def __init__(self, parent, db_fp):
-        super(LeftBar, self).__init__(
+        super(SideBar, self).__init__(
             parent, style=wx.TAB_TRAVERSAL | wx.CLIP_CHILDREN)
         self.db_fp = db_fp
 
@@ -26,7 +28,7 @@ class LeftBar(wx.Panel):
         self.tree.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.on_node_activated)
 
         root = self.tree.AddRoot(self.db_fp, 0)
-        self.tree.AppendItem(root, u'表', 0, data='TABLES')
+        self.tree.AppendItem(root, u'Tables', 0, data='TABLES')
         self.tree.Expand(root)
 
         main_sizer = wx.BoxSizer(wx.VERTICAL)
@@ -62,10 +64,10 @@ class MainFrame(wx.Frame):
         self.SetStatusText("Welcome!")
 
         self.main_panel = wx.Panel(self)
-        self.left_bar = LeftBar(self.main_panel, self.db_fp)
-        self.right_body = aui.AuiNotebook(
+        self.left = SideBar(self.main_panel, self.db_fp)
+        self.right = aui.AuiNotebook(
             self.main_panel, -1, style=wx.CLIP_CHILDREN)
-        self.right_body.AddPage(SQLEditor(self.right_body, self), "Welcome")
+        self.right.AddPage(SQLEditor(self.right, self), "Welcome")
         self.logger = wx.TextCtrl(
             self.main_panel,
             -1,
@@ -73,9 +75,9 @@ class MainFrame(wx.Frame):
 
         self.mgr = aui.AuiManager()
         self.mgr.SetManagedWindow(self.main_panel)
-        self.mgr.AddPane(self.right_body,
+        self.mgr.AddPane(self.right,
                          aui.AuiPaneInfo().CenterPane().Name("Notebook"))
-        self.mgr.AddPane(self.left_bar,
+        self.mgr.AddPane(self.left,
                          aui.AuiPaneInfo().Left().Layer(2).BestSize(
                              (240, -1)).MinSize((240, -1)).Floatable(
                                  self.allowAuiFloating).FloatingSize(
