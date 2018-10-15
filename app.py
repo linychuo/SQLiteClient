@@ -18,8 +18,11 @@ def read_conf_file(fp):
     """
     Read configuration from file
     """
-    with open(fp) as f:
-        return f.readlines()
+    try:
+        with open(fp) as f:
+            return f.readlines()
+    except IOError as e:
+        return []
 
 
 def write_conf_file(fp, content):
@@ -48,7 +51,7 @@ class Application(wx.App):
         selected_file = evt.selected_file
         main_frame = MainFrame(self, selected_file)
         main_frame.Show()
-        main_frame.Maximize()
+        # main_frame.Maximize()
 
     def write_file_history(self, fh):
         fp = os.path.join(self.app_config_dir, 'fh')

@@ -1,3 +1,2 @@
 wxPython
 pyinstaller
-yapf
