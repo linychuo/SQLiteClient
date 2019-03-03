@@ -1,4 +1,3 @@
-# -*- coding=utf-8 -*-
 """
 SQL editor of main frame
 """

@@ -6,13 +6,14 @@
 - yapf
 
 ## Development
-1. Clone this repository
+1. Please install python3!!! 
+2. Clone this repository
 ```bash
 git clone https://github.com/linychuo/SQLiteClient.git
 ```
-2. You could run **cmd** behind root dir
+3. You could run **dev** behind root dir
 ```bash
-Usage cmd [command]
+Usage dev [command]
 
 where [command] is one of:
   init                  create new virtual env

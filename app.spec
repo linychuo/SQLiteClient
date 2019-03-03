@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['app.py'],
-             pathex=['D:\\workspace\\SQLiteClient'],
+             pathex=['D:\\workspace\\SQLiteClient\\xman'],
              binaries=[],
              datas=[],
              hiddenimports=[],

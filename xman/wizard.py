@@ -1,6 +1,6 @@
-# -*- coding=utf-8 -*-
+from os.path import getsize, isfile
+
 import wx
-from os.path import isfile, getsize
 
 from events import ForwardMainEvent
 """
@@ -85,8 +85,8 @@ class SelectDBFileFrame(wx.Frame):
             if is_sqlite3_db(pathname):
                 self.app.write_file_history(pathname)
                 self.Destroy()
-                wx.PostEvent(
-                    self.app, ForwardMainEvent(selected_file=pathname))
+                wx.PostEvent(self.app,
+                             ForwardMainEvent(selected_file=pathname))
             else:
                 wx.MessageBox(u'选择的文件不是sqlite3数据文件，请重新选择!', u'错误',
                               wx.OK | wx.ICON_ERROR)
