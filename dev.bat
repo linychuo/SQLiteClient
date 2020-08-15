@@ -20,7 +20,7 @@ if "init" == "%ACTION%" (
 )
 
 :init
-python -m venv .env
+virtualenv .env
 goto :eof
 
 :activate
@@ -41,7 +41,7 @@ goto :eof
 
 :build
 if not exist "%~dp0.env\Scripts\pyinstaller.exe" call:prepare
-call %~dp0.env\Scripts\pyinstaller.exe app.spec
+call %~dp0.env\Scripts\python.exe ./xman/tools/dist.py
 goto :eof
 
 :fmt
@@ -61,7 +61,7 @@ goto :eof
 set space_2=  
 set space_4=	
 echo.
-echo Usage cmd [command]
+echo Usage dev [command]
 echo.
 echo where [command] is one of:
 echo %space_2%init		%space_4%create new virtual env
